@@ -1,9 +1,11 @@
-# Follow-Ups
+# Follow-Ups (team)
 
-A minimalist follow-up tracking app for daily use. Single-file, works offline, data is saved privately in each person's own browser.
+Shared multi-user follow-up tracker. Sign in with your name + PIN.
 
 **Live app:** https://anf-labs.github.io/followups/
 
-- Timeline / By Person / By WhatsApp Group views
-- Optional time + repeat (daily/weekly/monthly)
-- Per-item follow-up notes trail, bump-to-later, Backup/Restore
+- Owner & EA assign tasks to anyone and see everyone's progress (Team view)
+- Members see and work their own follow-ups
+- Timeline / Team / By Contact / By WhatsApp Group views, repeat, times, notes
+- Owner manages users in Settings
+- Backend: Supabase Edge Function gateway (PIN auth, role rules enforced server-side)
