@@ -311,7 +311,7 @@
       people.forEach(p => {
         const b = document.createElement('button');
         b.className = 'person-btn';
-        b.innerHTML = '<span class="avatar">'+esc(initials(p.name))+'</span><span>'+esc(p.name)+'</span><span class="role-tag">'+(p.role==='member'?'':esc(p.role))+'</span>';
+        b.innerHTML = '<span class="avatar">'+esc(initials(p.name))+'</span><span>'+esc(p.name)+'</span>';
         b.onclick = () => pinStep(p);
         pg.appendChild(b);
       });
