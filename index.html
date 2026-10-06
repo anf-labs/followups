@@ -270,6 +270,47 @@
   .lk-row .row-btn{margin-left:auto}
   .avatar.sm{width:26px; height:26px; font-size:11px}
   .item-main .ack-btn{align-self:center}
+  /* ---------- board (kanban) ---------- */
+  .wrap.wide{max-width:1480px}
+  .wrap.wide .add{max-width:760px}
+  .kbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px}
+  .kchips{display:flex; gap:6px; flex-wrap:wrap; flex:1 1 auto}
+  .kchip{border:1px solid var(--line); background:var(--card); color:var(--sub); border-radius:99px; padding:5px 11px; font-size:12.5px; font-weight:600; cursor:pointer}
+  .kchip.on{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+  .ksearch{flex:1 1 180px; max-width:280px; border:1px solid var(--line); border-radius:99px; padding:7px 13px; font-size:13.5px; background:var(--card); color:var(--ink); outline:none}
+  .ksearch:focus{border-color:var(--accent)}
+  .kboard{display:flex; gap:12px; overflow-x:auto; padding:2px 2px 14px; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch; align-items:flex-start}
+  .kcol{flex:0 0 268px; max-width:268px; background:var(--line); border-radius:var(--radius); padding:8px; scroll-snap-align:start; display:flex; flex-direction:column; min-height:160px; transition:background .12s, box-shadow .12s}
+  @media (max-width:560px){ .kcol{flex-basis:82vw; max-width:82vw} }
+  .kcol.over{background:var(--accent-soft); box-shadow:inset 0 0 0 2px var(--accent)}
+  .kcol-h{display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:4px 6px 10px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--sub)}
+  .kcol-h .count{background:var(--card); color:var(--sub); border-radius:99px; padding:1px 8px; font-size:11px; letter-spacing:0}
+  .kcol-h .count.red{background:var(--red-soft); color:var(--red)}
+  .kcol-hint{flex-basis:100%; font-size:11px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--sub); opacity:.85; margin-top:-4px}
+  .kcol-new .kcol-name{color:var(--blue)} .kcol-escalated .kcol-name{color:var(--red)} .kcol-done .kcol-name{color:var(--green)}
+  .kcol-body{display:flex; flex-direction:column; gap:8px; min-height:60px; max-height:calc(100vh - 330px); overflow-y:auto; padding-bottom:2px}
+  .kempty{border:1px dashed var(--sub); opacity:.45; border-radius:10px; padding:16px; text-align:center; font-size:12.5px; color:var(--sub)}
+  .kcard{background:var(--card); border:1px solid var(--line); border-radius:11px; padding:10px 11px; box-shadow:0 1px 2px rgba(0,0,0,.05); cursor:grab; user-select:none; -webkit-user-select:none; position:relative}
+  .kcard:hover{border-color:var(--sub)}
+  .kcard.urgent{border-left:3px solid var(--red)}
+  .kcard.isdone{opacity:.6} .kcard.isdone .kc-title{text-decoration:line-through; color:var(--sub)}
+  .kcard.dragging{opacity:.35}
+  .kc-top{display:flex; gap:6px; align-items:flex-start}
+  .kc-title{flex:1; font-size:14px; font-weight:500; line-height:1.35; word-wrap:break-word}
+  .kc-more{border:none; background:transparent; color:var(--sub); font-size:16px; line-height:1; padding:0 2px; cursor:pointer; border-radius:6px; flex:0 0 auto; margin:-2px -4px 0 0}
+  .kc-more:hover{background:var(--line); color:var(--ink)}
+  .kc-meta{display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:6px; font-size:12px; color:var(--sub)}
+  .kc-ack{margin-top:8px; width:100%}
+  .drag-ghost{position:fixed; left:0; top:0; z-index:90; pointer-events:none; box-shadow:0 10px 30px rgba(0,0,0,.25); transform:translate(-9999px,-9999px); rotate:2deg}
+  body.dragging-body{cursor:grabbing; user-select:none}
+  .menu-lbl{padding:8px 16px 2px; font-size:11px; color:var(--sub); text-transform:uppercase; letter-spacing:.05em; border-top:1px solid var(--line); margin-top:4px}
+  .detail-host .card{margin-top:10px}
+  .detail-host .item-main{cursor:default}
+  .stage-row{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px}
+  .stage-btn{border:1px solid var(--line); background:transparent; color:var(--sub); border-radius:99px; padding:5px 11px; font-size:12.5px; font-weight:600; cursor:pointer}
+  .stage-btn.on{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+  .stage-btn:disabled{opacity:.4; cursor:default}
+  .modal.wide{max-width:640px}
 </style>
 </head>
 <body>
@@ -366,7 +407,7 @@
   let session = null;
   try { session = JSON.parse(localStorage.getItem(SKEY)); } catch(e){}
   let state = { me:null, people:[], tasks:[], channels:{telegram:false, whatsapp:false} };
-  let view = localStorage.getItem(VKEY) || 'timeline';
+  let view = localStorage.getItem(VKEY) || 'board';
   let openId = null, lastDeleted = null, toastTimer = null, pollTimer = null;
   let settingsPeople = null, urgentOn = false;
 
@@ -399,7 +440,7 @@
     const f=m.querySelector('input,button:not(.modal-x),select'); if(f) setTimeout(()=>f.focus(),30);
     return m;
   }
-  function closeModal(){ $('modalBg').hidden=true; $('modal').innerHTML=''; document.body.classList.remove('modal-open'); }
+  function closeModal(){ $('modalBg').hidden=true; $('modal').innerHTML=''; $('modal').classList.remove('wide'); document.body.classList.remove('modal-open'); if(detailId){ detailId=null; renderApp(); } }
   const modalOpen = () => !$('modalBg').hidden;
   $('modalBg').addEventListener('click', e=>{ if(e.target===$('modalBg')) closeModal(); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape' && modalOpen()) closeModal(); });
@@ -501,7 +542,7 @@
 
   function buildTabs(){
     const boss = isBoss(session.role);
-    const tabs = [['timeline','Timeline']];
+    const tabs = [['board','Board'],['timeline','Timeline']];
     if (boss) tabs.push(['team','Team']);
     tabs.push(['contact','By Contact']); tabs.push(['group','By Group']);
     if (session.role==='owner') tabs.push(['settings','Settings']);
@@ -512,7 +553,7 @@
       b.className = (view===k?'on':'');
       b.onclick=()=>setView(k); host.appendChild(b);
     });
-    if (!tabs.some(t=>t[0]===view)) view='timeline';
+    if (!tabs.some(t=>t[0]===view)) view='board';
   }
   function setView(v){ view=v; localStorage.setItem(VKEY,v); [...$('tabs').children].forEach(b=>b.classList.toggle('on', b.dataset.k===v)); renderApp(); }
   function updateDot(){ const d=$('newDot'); if(!d) return; const n=state.tasks.filter(isNew).length; d.hidden=!n; d.textContent=n; }
@@ -535,7 +576,7 @@
     const boss = isBoss(session.role);
     const task = { what, who:$('who').value.trim(), wgroup:$('wgroup').value.trim(),
       due: $('when').value||todayStr(), attime:$('attime').value||'', repeat:$('repeat').value||'',
-      done:false, log:[], assigned_to: boss ? $('assignTo').value : session.id, priority: urgentOn?'high':'' };
+      done:false, log:[], assigned_to: boss ? $('assignTo').value : session.id, priority: urgentOn?'high':'', stage:'todo' };
     $('what').value=''; $('who').value=''; $('wgroup').value=''; $('when').value=todayStr(); $('attime').value=''; $('repeat').value=''; urgentOn=false; $('urgentBtn').classList.remove('on');
     saveTask(task, true);
     $('what').focus();
@@ -609,7 +650,7 @@
     menuEl.style.left=Math.max(8, Math.min(r.right-mw, window.innerWidth-mw-8))+'px';
   }
 
-  const isSysLog = l => l.sys || l.text==='Done ✓' || /^Done ✓ —/.test(l.text) || /^Bumped to /.test(l.text) || /^(Date|Time|Repeat|Person|Group|Assigned|Seen by|Priority|Received via|Next follow-up|Escalation cleared) /.test(l.text);
+  const isSysLog = l => l.sys || l.text==='Done ✓' || /^Done ✓ —/.test(l.text) || /^Bumped to /.test(l.text) || /^(Date|Time|Repeat|Person|Group|Assigned|Seen by|Priority|Received via|Next follow-up|Escalation cleared|Moved to|Reopened)\b/.test(l.text);
   function dueLabel(item){
     const n=daysLate(item.due), t=item.attime?' · '+fmtTime(item.attime):'';
     if(n>0) return '<span class="due late">'+(n===1?'1 day late':n+' days late')+'</span>';
@@ -622,7 +663,7 @@
     opts = opts||{};
     const boss = isBoss(session.role);
     const el=document.createElement('div');
-    el.className='item'+(item.done?' done':'')+(openId===item.id?' open':'');
+    el.className='item'+(item.done?' done':'')+(openId===item.id||opts.inModal?' open':'');
     const main=document.createElement('div'); main.className='item-main';
     const tick=document.createElement('button'); tick.className='tick'; tick.innerHTML='✓';
     tick.title=item.done?'Reopen':(item.repeat?'Done — schedules next':'Mark done');
@@ -648,7 +689,7 @@
       ack.onclick=e=>{ e.stopPropagation(); ackItem(item); }; main.appendChild(ack);
     } else if(!item.done){ const bump=document.createElement('button'); bump.className='bump'; bump.innerHTML='⏵'; bump.title='Push to later';
       bump.onclick=e=>{ e.stopPropagation(); showBumpMenu(bump,item); }; main.appendChild(bump); }
-    main.onclick=()=>{ openId=(openId===item.id?null:item.id); renderApp(); };
+    main.onclick=()=>{ if(opts.inModal) return; openId=(openId===item.id?null:item.id); renderApp(); };
     el.appendChild(main);
 
     const det=document.createElement('div'); det.className='detail';
@@ -670,6 +711,7 @@
     const nb=document.createElement('button'); nb.textContent='Log';
     const addNote=()=>{ const t=ni.value.trim(); if(!t) return;
       item.log=(item.log||[]).concat([{ts:Date.now(),text:t,by:session.name}]);
+      if(!item.done && (item.stage||'todo')==='todo' && !item.escalated_at){ item.stage='chasing'; item.log=item.log.concat([{ts:Date.now(),text:'Moved to Chasing',sys:true}]); }
       const n=Number(nx.value||0);
       if(n && !item.done){ const base=daysLate(item.due)>0?todayStr():item.due; item.due=addDays(base,n); item.log=item.log.concat([{ts:Date.now(),text:'Next follow-up '+fmt(item.due),sys:true,by:session.name}]); }
       ni.value=''; nx.value='0'; openId=item.id; saveTask(item); };
@@ -811,6 +853,142 @@
       '<p class="hint">Voice notes aren\'t read yet — type it or forward a text.</p>');
   }
 
+  // ================= BOARD (kanban) =================
+  const COLS = [
+    { k:'new', label:'New', hint:'needs acknowledging', drop:false },
+    { k:'todo', label:'To chase', hint:'not started', drop:true },
+    { k:'chasing', label:'Chasing', hint:'followed up, no answer yet', drop:true },
+    { k:'waiting', label:'Waiting on them', hint:'they promised something', drop:true },
+    { k:'escalated', label:'Escalated', hint:'needs the owner', drop:true },
+    { k:'done', label:'Done', hint:'', drop:true },
+  ];
+  const COL_LABEL = Object.fromEntries(COLS.map(c=>[c.k,c.label]));
+  const colOf = i => i.done ? 'done' : i.escalated_at ? 'escalated' : isNew(i) ? 'new' : (i.stage==='chasing'||i.stage==='waiting') ? i.stage : 'todo';
+  let boardFilter = { who:'all', q:'' };
+  let detailId = null;
+
+  function moveTo(item, k){
+    const from = colOf(item);
+    if (from===k || k==='new') return;
+    if (k==='done'){ if(!item.done) completeItem(item); return; }
+    if (k==='escalated'){ escalateItem(item); return; }
+    const log=[];
+    if (item.done){ item.done=false; item.done_at=null; log.push({ts:Date.now(),text:'Reopened',sys:true,by:session.name}); }
+    if (isNew(item)){ item.ack_at=new Date().toISOString(); log.push({ts:Date.now(),text:'Seen by '+session.name,sys:true}); }
+    if (item.escalated_at){ if(!isBoss(session.role)){ toast('Only the owner or coordinator can clear an escalation'); return; } item.escalated_at=null; log.push({ts:Date.now(),text:'Escalation cleared by '+session.name,sys:true}); }
+    item.stage=k; log.push({ts:Date.now(),text:'Moved to '+COL_LABEL[k],sys:true,by:session.name});
+    item.log=(item.log||[]).concat(log);
+    saveTask(item); toast('Moved to '+COL_LABEL[k]);
+  }
+
+  function showMoveMenu(anchor, item){
+    closeMenu(); menuEl=document.createElement('div'); menuEl.className='menu';
+    const cur=colOf(item);
+    const open=document.createElement('button'); open.textContent='Open details'; open.onclick=ev=>{ ev.stopPropagation(); closeMenu(); openDetail(item); }; menuEl.appendChild(open);
+    const lbl=document.createElement('div'); lbl.className='menu-lbl'; lbl.textContent='Move to'; menuEl.appendChild(lbl);
+    COLS.filter(c=>c.drop && c.k!==cur).forEach(c=>{ const b=document.createElement('button'); b.textContent=c.label; b.onclick=ev=>{ ev.stopPropagation(); closeMenu(); moveTo(item,c.k); }; menuEl.appendChild(b); });
+    document.body.appendChild(menuEl);
+    const r=anchor.getBoundingClientRect(), mw=190, mh=menuEl.offsetHeight;
+    menuEl.style.top=Math.max(8, Math.min(r.bottom+4, window.innerHeight-mh-8))+'px';
+    menuEl.style.left=Math.max(8, Math.min(r.right-mw, window.innerWidth-mw-8))+'px';
+  }
+
+  function openDetail(item){
+    detailId=item.id; openId=item.id;
+    openModal('<div id="detailHost" class="detail-host"></div>'); $('modal').classList.add('wide');
+    renderDetailModal();
+  }
+  function renderDetailModal(){
+    const host=$('detailHost'); if(!host || !detailId) return;
+    const item=state.tasks.find(t=>t.id===detailId);
+    if(!item){ closeModal(); detailId=null; return; }
+    openId=item.id; host.innerHTML='';
+    const stageRow=document.createElement('div'); stageRow.className='stage-row';
+    const cur=colOf(item);
+    COLS.forEach(c=>{ const b=document.createElement('button'); b.className='stage-btn'+(c.k===cur?' on':''); b.textContent=c.label; b.disabled=!c.drop&&c.k!==cur; b.onclick=()=>moveTo(item,c.k); stageRow.appendChild(b); });
+    host.appendChild(stageRow);
+    const card=document.createElement('div'); card.className='card'; card.appendChild(itemEl(item,{inModal:true})); host.appendChild(card);
+  }
+
+  // ---- drag (mouse / pen; phones use the ⋯ menu) ----
+  let drag=null;
+  function startDrag(e, card, item){
+    if (e.button!==0 || e.pointerType==='touch') return;
+    const sx=e.clientX, sy=e.clientY; let ghost=null, over=null;
+    const begin=()=>{ ghost=card.cloneNode(true); ghost.className='kcard drag-ghost'; ghost.style.width=card.offsetWidth+'px'; document.body.appendChild(ghost); card.classList.add('dragging'); document.body.classList.add('dragging-body'); };
+    const colAt=(x,y)=>{ const el=document.elementFromPoint(x,y); return el && el.closest('.kcol[data-drop="1"]'); };
+    const move=ev=>{ if(!ghost){ if(Math.hypot(ev.clientX-sx,ev.clientY-sy)<6) return; begin(); }
+      ghost.style.transform='translate('+(ev.clientX-20)+'px,'+(ev.clientY-14)+'px)';
+      const c=colAt(ev.clientX,ev.clientY); if(c!==over){ if(over) over.classList.remove('over'); over=c; if(over) over.classList.add('over'); } };
+    const end=ev=>{ window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',end); window.removeEventListener('pointercancel',end);
+      if(ghost){ ghost.remove(); card.classList.remove('dragging'); document.body.classList.remove('dragging-body'); if(over){ over.classList.remove('over'); moveTo(item, over.dataset.k); } drag=null; setTimeout(()=>{ drag=null; },0); drag='done'; }
+      else drag=null; };
+    drag='pending';
+    window.addEventListener('pointermove',move); window.addEventListener('pointerup',end); window.addEventListener('pointercancel',end);
+  }
+
+  function kcard(item){
+    const boss=isBoss(session.role);
+    const el=document.createElement('div'); el.className='kcard'+(item.priority==='high'&&!item.done?' urgent':'')+(item.done?' isdone':'');
+    el.dataset.id=item.id;
+    const meta=[];
+    if (boss && item.assigned_to) meta.push('<span class="asg-chip">'+esc(nameOf(item.assigned_to))+'</span>');
+    if (item.who) meta.push('<span class="who-chip">'+esc(item.who)+'</span>');
+    if (!item.done) meta.push(dueLabel(item)); else if(item.done_at) meta.push('<span class="due">'+fmtTs(item.done_at)+'</span>');
+    const tags=[];
+    if (item.priority==='high'&&!item.done) tags.push('<span class="chip red">Urgent</span>');
+    if (item.wgroup) tags.push('<span class="grp-chip">💬 '+esc(item.wgroup)+'</span>');
+    if (SRC_LABEL[item.source]) tags.push('<span class="chip '+(item.source==='telegram'?'tg':'wa')+'">'+SRC_LABEL[item.source].replace('via ','')+'</span>');
+    const fus=fuCount(item); if (fus) tags.push('<span class="fu-count">'+fus+' follow-up'+(fus>1?'s':'')+'</span>');
+    if (needsEsc(item)) tags.push('<span class="chip amber">escalate?</span>');
+    el.innerHTML='<div class="kc-top"><div class="kc-title">'+esc(item.what)+'</div><button class="kc-more" title="Move / open">⋯</button></div>'+
+      (meta.length?'<div class="kc-meta">'+meta.join(' ')+'</div>':'')+(tags.length?'<div class="kc-meta">'+tags.join(' ')+'</div>':'')+
+      (isNew(item)&&(boss||item.assigned_to===session.id)?'<button class="ack-btn kc-ack">Got it</button>':'');
+    el.querySelector('.kc-more').onclick=e=>{ e.stopPropagation(); showMoveMenu(e.currentTarget,item); };
+    const ack=el.querySelector('.kc-ack'); if(ack) ack.onclick=e=>{ e.stopPropagation(); ackItem(item); };
+    el.onclick=()=>{ if(drag==='done') return; openDetail(item); };
+    el.addEventListener('pointerdown', e=>{ if(e.target.closest('button')) return; startDrag(e,el,item); });
+    return el;
+  }
+
+  function renderBoard(host){
+    const boss=isBoss(session.role);
+    const q=boardFilter.q.trim().toLowerCase();
+    let items=state.tasks.slice();
+    if (boss && boardFilter.who!=='all') items=items.filter(i=>i.assigned_to===boardFilter.who);
+    if (q) items=items.filter(i=>(i.what+' '+(i.who||'')+' '+(i.wgroup||'')).toLowerCase().includes(q));
+    const byCol={}; COLS.forEach(c=>byCol[c.k]=[]);
+    items.forEach(i=>byCol[colOf(i)].push(i));
+    COLS.forEach(c=>byCol[c.k].sort((a,b)=>c.k==='done'?(new Date(b.done_at||0))-(new Date(a.done_at||0)):((b.priority==='high')-(a.priority==='high'))||sortKey(a).localeCompare(sortKey(b))));
+    byCol.done=byCol.done.slice(0,25);
+
+    host.innerHTML='';
+    const bar=document.createElement('div'); bar.className='kbar';
+    if (boss){
+      const chips=document.createElement('div'); chips.className='kchips';
+      [['all','Everyone']].concat(state.people.map(p=>[p.id,p.name])).forEach(([k,label])=>{ const b=document.createElement('button'); b.className='kchip'+(boardFilter.who===k?' on':''); b.textContent=label; b.onclick=()=>{ boardFilter.who=k; renderApp(); }; chips.appendChild(b); });
+      bar.appendChild(chips);
+    }
+    const si=document.createElement('input'); si.className='ksearch'; si.placeholder='Search follow-ups…'; si.value=boardFilter.q;
+    si.oninput=()=>{ boardFilter.q=si.value; const pos=si.selectionStart; renderApp(); const n=host.querySelector('.ksearch'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } };
+    bar.appendChild(si); host.appendChild(bar);
+
+    const board=document.createElement('div'); board.className='kboard';
+    const t=todayStr();
+    COLS.forEach(c=>{
+      const arr=byCol[c.k];
+      const col=document.createElement('div'); col.className='kcol kcol-'+c.k; col.dataset.k=c.k; col.dataset.drop=c.drop?'1':'0';
+      const late=c.k!=='done'?arr.filter(i=>i.due&&i.due<t).length:0;
+      col.innerHTML='<div class="kcol-h"><span class="kcol-name">'+c.label+'</span><span class="count">'+arr.length+'</span>'+(late?'<span class="count red">'+late+' late</span>':'')+(c.hint?'<span class="kcol-hint">'+c.hint+'</span>':'')+'</div><div class="kcol-body"></div>';
+      const body=col.querySelector('.kcol-body');
+      if (!arr.length) body.innerHTML='<div class="kempty">'+(c.k==='new'?'Nothing new':c.k==='done'?'—':'Drop here')+'</div>';
+      arr.forEach(i=>body.appendChild(kcard(i)));
+      board.appendChild(col);
+    });
+    host.appendChild(board);
+    if (!items.length) host.appendChild(Object.assign(document.createElement('div'),{className:'empty',textContent:q?'No follow-ups match that.':'Nothing here yet — add one above or send it to the bot.'}));
+  }
+
   // ---------- settings ----------
   async function renderSettings(host){
     host.innerHTML='<div class="empty" style="border:none">Loading…</div>';
@@ -921,7 +1099,10 @@
     const host=$('viewMain');
     const showAdd = view!=='settings';
     $('addBar').style.display = showAdd?'':'none';
+    document.querySelector('.wrap').classList.toggle('wide', view==='board');
+    if (detailId) renderDetailModal();
     if (view==='settings'){ renderSettings(host); return; }
+    if (view==='board'){ renderBoard(host); return; }
     if (view==='team'){ renderGrouped(host,'assigned_to',{hideAssignee:true},'tm'); return; }
     if (view==='contact'){ renderGrouped(host,'who',{hideWho:true},''); return; }
     if (view==='group'){ renderGrouped(host,'wgroup',{hideGroup:true},'grp'); return; }
